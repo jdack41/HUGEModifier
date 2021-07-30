@@ -17,8 +17,8 @@
 {
     if (self = [super init]) {
         virtualHID = [HMVirtualHID shared];
-        verticalScrollFlag = false;
-        horizontalScrollFlag = false;
+        isVerticalScroll = false;
+        isHorizontalScroll = false;
     }
     return self;
 }
@@ -38,22 +38,22 @@
     } else if (button == 5) { // Fn1
         [virtualHID button:5 down:down];
     } else if (button == 4) { // <
-        if(!verticalScrollFlag) {
+        if(!isVerticalScroll) {
             if (!down) return;
-            verticalScrollFlag = true;
+            isVerticalScroll = true;
         } else {
             if (!down) return;
-            verticalScrollFlag = false;
-            horizontalScrollFlag = false;
+            isVerticalScroll = false;
+            isHorizontalScroll = false;
         }
     } else if (button == 3) { // >
-        if(!horizontalScrollFlag) {
+        if(!isHorizontalScroll) {
             if (!down) return;
-            horizontalScrollFlag = true;
+            isHorizontalScroll = true;
         } else {
             if (!down) return;
-            verticalScrollFlag = false;
-            horizontalScrollFlag = false;
+            isVerticalScroll = false;
+            isHorizontalScroll = false;
         }
     } else if (button == 2) { // WheelClick Launchpad
         if (!down) return;
@@ -69,15 +69,15 @@
 - (void)movedX:(int16_t)x Y:(int16_t)y manager:(HMManager*)manager {
     if ([manager isMouseDown:4]) {
         [self rotateWheel:CGPointMake(0, y)];
-        verticalScrollFlag = false;
-        horizontalScrollFlag = false;
+        isVerticalScroll = false;
+        isHorizontalScroll = false;
     } else if ([manager isMouseDown:3]) {
         [self rotateWheel:CGPointMake(x, 0)];
-        verticalScrollFlag = false;
-        horizontalScrollFlag = false;
-    } else if (verticalScrollFlag) {
+        isVerticalScroll = false;
+        isHorizontalScroll = false;
+    } else if (isVerticalScroll) {
         [self rotateWheel:CGPointMake(0, y)];
-    } else if (horizontalScrollFlag) {
+    } else if (isHorizontalScroll) {
         [self rotateWheel:CGPointMake(x, 0)];
     } else {
         [virtualHID moveX:x Y:y];

@@ -21,6 +21,8 @@ struct VirtualButton {
 
 @interface HMProfile : NSObject {
     HMVirtualHID *virtualHID;
+    bool isVerticalScroll;
+    bool isHorizontalScroll;
 }
 
 - (void)clicked:(uint8_t)button isDown:(BOOL)down manager:(HMManager*)manager;

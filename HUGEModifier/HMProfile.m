@@ -17,45 +17,49 @@
 {
     if (self = [super init]) {
         virtualHID = [HMVirtualHID shared];
+        verticalScrollFlag = false;
+        horizontalScrollFlag = false;
     }
     return self;
 }
 
 - (void)clicked:(uint8_t)button isDown:(BOOL)down manager:(HMManager*)manager {
     
-    if (button == 6) {
-        [virtualHID button:0 down:down];
-    } else if (button == 7) {
-        [virtualHID button:1 down:down];
-    } else if (button == 0) {
-        if (!down) return;
-        uint8_t code = kHIDUsage_KeyboardReturnOrEnter;
-        if ([manager isMouseDown:1]) code = kHIDUsage_KeyboardSpacebar;
-        [virtualHID key:code down:YES];
-        [virtualHID key:code down:NO];
-    } else if (button == 5) {
-        if (!down) return;
-        uint8_t code = kHIDUsage_KeyboardOpenBracket;
-        if ([manager isMouseDown:1]) code = kHIDUsage_KeyboardCloseBracket;
-        [virtualHID command:YES];
-        [virtualHID key:code down:YES];
-        [virtualHID command:NO];
-        [virtualHID key:code down:NO];
-    } else if (button == 4) { // Mission Control
+    if (button == 6) { // Fn2
+        [virtualHID button:4 down:down];
+    } else if (button == 7) { // Fn3
         if (!down) return;
         [virtualHID control:YES];
         [virtualHID key:kHIDUsage_KeyboardUpArrow down:YES];
         [virtualHID control:NO];
         [virtualHID key:kHIDUsage_KeyboardUpArrow down:NO];
-    } else if (button == 3) { // Expose
-        if (!down) return;
-        [virtualHID control:YES];
-        [virtualHID key:kHIDUsage_KeyboardDownArrow down:YES];
-        [virtualHID control:NO];
-        [virtualHID key:kHIDUsage_KeyboardDownArrow down:NO];
-    } else if (button == 2) { // Launchpad
+    } else if (button == 0) { // L
+        [virtualHID button:1 down:down];
+    } else if (button == 5) { // Fn1
+        [virtualHID button:5 down:down];
+    } else if (button == 4) { // <
+        if(!verticalScrollFlag) {
+            if (!down) return;
+            verticalScrollFlag = true;
+        } else {
+            if (!down) return;
+            verticalScrollFlag = false;
+            horizontalScrollFlag = false;
+        }
+    } else if (button == 3) { // >
+        if(!horizontalScrollFlag) {
+            if (!down) return;
+            horizontalScrollFlag = true;
+        } else {
+            if (!down) return;
+            verticalScrollFlag = false;
+            horizontalScrollFlag = false;
+        }
+    } else if (button == 2) { // WheelClick Launchpad
         if (!down) return;
         [self openApplication:@"Launchpad"];
+    } else if (button == 1) { // R
+        [virtualHID button:2 down:down];
     }
     
 //    if (down) printf("Button %d down\n", button);
@@ -63,8 +67,18 @@
 }
 
 - (void)movedX:(int16_t)x Y:(int16_t)y manager:(HMManager*)manager {
-    if ([manager isMouseDown:1]) {
-        [self rotateWheel:CGPointMake(x, y)];
+    if ([manager isMouseDown:4]) {
+        [self rotateWheel:CGPointMake(0, y)];
+        verticalScrollFlag = false;
+        horizontalScrollFlag = false;
+    } else if ([manager isMouseDown:3]) {
+        [self rotateWheel:CGPointMake(x, 0)];
+        verticalScrollFlag = false;
+        horizontalScrollFlag = false;
+    } else if (verticalScrollFlag) {
+        [self rotateWheel:CGPointMake(0, y)];
+    } else if (horizontalScrollFlag) {
+        [self rotateWheel:CGPointMake(x, 0)];
     } else {
         [virtualHID moveX:x Y:y];
     }
@@ -72,17 +86,7 @@
 }
 
 - (void)wheelVertical:(int16_t)vertical manager:(HMManager*)manager {
-    uint8_t code = 0;
-    if (vertical > 0) code = kHIDUsage_KeyboardVolumeUp;
-    if (vertical < 0) code = kHIDUsage_KeyboardVolumeDown;
-    if (code) {
-        [virtualHID shift:YES];
-        [virtualHID option:YES];
-        [virtualHID key:code down:YES];
-        [virtualHID shift:NO];
-        [virtualHID option:NO];
-        [virtualHID key:code down:NO];
-    }
+    [virtualHID wheelVertical:vertical Horizontal:0];
 }
 
 - (void)wheelHorizontal:(int16_t)horizontal manager:(HMManager*)manager {
@@ -95,7 +99,7 @@
 }
 
 - (void)rotateWheel:(CGPoint)offset {
-    CGEventRef scroll = CGEventCreateScrollWheelEvent2(nil, kCGScrollEventUnitPixel, 2, offset.y * 1.5, offset.x * 1.5, 0);
+    CGEventRef scroll = CGEventCreateScrollWheelEvent2(nil, kCGScrollEventUnitPixel, 2, offset.y * 1.5, offset.x * 1, 0);
 //    CGEventRef scroll = CGEventCreateScrollWheelEvent(nil, kCGScrollEventUnitPixel, 2, offset.y * 1.5, offset.x * 1.5);
     CGEventPost(kCGHIDEventTap, scroll);
     CFRelease(scroll);

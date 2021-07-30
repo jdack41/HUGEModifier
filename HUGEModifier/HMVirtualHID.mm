@@ -122,9 +122,8 @@ static HMVirtualHID *_shared = nil;
 }
 
 - (void)button:(uint8_t)button down:(BOOL)down {
-    uint8_t modifier = 1 << button;
-    if (down) mouseReport.buttons.insert(modifier);
-    else mouseReport.buttons.erase(modifier);
+    if (down) mouseReport.buttons.insert(button);
+    else mouseReport.buttons.erase(button);
     [self postMouseReport:mouseReport];
 }
 

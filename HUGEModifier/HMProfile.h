@@ -9,6 +9,7 @@
 #import <Foundation/Foundation.h>
 #import "HMVirtualHID.h"
 #import "HMManager.h"
+@import CoreGraphics;
 
 NS_ASSUME_NONNULL_BEGIN
 

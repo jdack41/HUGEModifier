@@ -26,7 +26,9 @@
 - (void)clicked:(uint8_t)button isDown:(BOOL)down manager:(HMManager*)manager {
     
     if (button == 6) { // Fn2
-        [virtualHID button:4 down:down];
+        [virtualHID button:kHIDUsage_Button_4 down:down];
+//        [virtualHID command:down];
+//        [virtualHID key:kHIDUsage_KeyboardOpenBracket down:down];
     } else if (button == 7) { // Fn3
         if (!down) return;
         [virtualHID control:YES];
@@ -36,7 +38,9 @@
     } else if (button == 0) { // L
         [virtualHID button:1 down:down];
     } else if (button == 5) { // Fn1
-        [virtualHID button:5 down:down];
+        [virtualHID button:kHIDUsage_Button_5 down:down];
+//        [virtualHID command:down];
+//        [virtualHID key:kHIDUsage_KeyboardCloseBracket down:down];
     } else if (button == 4) { // <
         if(!isVerticalScroll) {
             if (!down) return;

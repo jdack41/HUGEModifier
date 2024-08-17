@@ -44,33 +44,17 @@ static HMVirtualHID *_shared = nil;
         
         pqrs::dispatcher::extra::initialize_shared_dispatcher();
         std::filesystem::path client_socket_file_path("/tmp/karabiner_driverkit_virtual_hid_device_service_client.sock");
-        virtualhid_client = new pqrs::karabiner::driverkit::virtual_hid_device_service::client(client_socket_file_path);
+        virtualhid_client = new pqrs::karabiner::driverkit::virtual_hid_device_service::client();
 
         std::thread call_ready_thread([] {
             std::cout << "loading..." << std::endl;
             keyboard_ready = pointing_ready = false;
-            while (true) {
-                {
-                    std::lock_guard<std::mutex> lock(client_mutex);
-                    if (virtualhid_client) {
-                        virtualhid_client->async_driver_loaded();
-                        virtualhid_client->async_driver_version_matched();
-                        virtualhid_client->async_virtual_hid_keyboard_ready();
-                        virtualhid_client->async_virtual_hid_pointing_ready();
-                    }
-                }
-                if (keyboard_ready && pointing_ready) {
-                    std::cout << "VirtualHID ready." << std::endl;
-                    break;
-                }
-                std::this_thread::sleep_for(std::chrono::milliseconds(500));
-            }
         });
         
         virtualhid_client->connected.connect([] {
             std::cout << "connected" << std::endl;
 
-            virtualhid_client->async_virtual_hid_keyboard_initialize(pqrs::hid::country_code::us);
+            virtualhid_client->async_virtual_hid_keyboard_initialize(pqrs::hid::country_code::japan);
             virtualhid_client->async_virtual_hid_pointing_initialize();
         });
         virtualhid_client->connect_failed.connect([](auto&& error_code) {
@@ -82,7 +66,7 @@ static HMVirtualHID *_shared = nil;
         virtualhid_client->error_occurred.connect([](auto&& error_code) {
             std::cout << "error_occurred " << error_code << std::endl;
         });
-        virtualhid_client->driver_loaded_response.connect([](auto&& driver_loaded) {
+        virtualhid_client->driver_connected.connect([](auto&& driver_loaded) {
             static std::optional<bool> previous_value;
 
             if (previous_value != driver_loaded) {
@@ -90,20 +74,24 @@ static HMVirtualHID *_shared = nil;
                 previous_value = driver_loaded;
             }
         });
-        virtualhid_client->driver_version_matched_response.connect([](auto&& driver_version_matched) {
+        virtualhid_client->driver_version_mismatched.connect([](auto&& driver_version_mismatched) {
             static std::optional<bool> previous_value;
 
-            if (previous_value != driver_version_matched) {
-                std::cout << "driver_version_matched " << driver_version_matched << std::endl;
-                previous_value = driver_version_matched;
+            if (previous_value != driver_version_mismatched) {
+                std::cout << "driver_version_matched " << driver_version_mismatched << std::endl;
+                previous_value = driver_version_mismatched;
             }
         });
-        virtualhid_client->virtual_hid_keyboard_ready_response.connect([](auto&& ready) {
-            if (ready) keyboard_ready = true;
-        });
-        virtualhid_client->virtual_hid_pointing_ready_response.connect([](auto&& ready) {
-            if (ready) pointing_ready = true;
-        });
+
+// temporary solution. seem to be okay removing them, though
+//        virtualhid_client->virtual_hid_keyboard_ready_response.connect([](auto&& ready) {
+//            if (ready) keyboard_ready = true;
+//        });
+//        virtualhid_client->virtual_hid_pointing_ready_response.connect([](auto&& ready) {
+//            if (ready) pointing_ready = true;
+//        });
+        
+        pointing_ready = true;
         
         auto clean = [] {
             std::cout << "cleaning..." << std::endl;
